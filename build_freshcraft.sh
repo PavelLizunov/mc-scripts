@@ -17,7 +17,7 @@ DEFAULT_VOLUME_PROPERTIES="$DEFAULT_VOLUME_DIR/server.properties:/minecraft/serv
 DEFAULT_VOLUME_WHITELIST="$DEFAULT_VOLUME_DIR/whitelist.json:/minecraft/whitelist.json"
 DEFAULT_VOLUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/user_jvm_args.txt"
 DEFAULT_VOLUME_RUN_SCRIPT="$DEFAULT_VOLUME_DIR/run.sh:/minecraft/run.sh"
-DEFAULT_VOULUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/libraries/net/minecraftforge/forge/1.20.1-47.3.12/unix_args.txt"
+DEFAULT_VOLUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/libraries/net/minecraftforge/forge/1.20.1-47.3.12/unix_args.txt"
 
 # Дополнительные volumes (только кастомные, без базовых)
 DEFAULT_ADDITIONAL_VOLUMES=""
@@ -44,8 +44,6 @@ VOLUME_PROPERTIES=${VOLUME_PROPERTIES:-$DEFAULT_VOLUME_PROPERTIES}
 VOLUME_WHITELIST=${VOLUME_WHITELIST:-$DEFAULT_VOLUME_WHITELIST}
 VOLUME_JVM_ARGS=${VOLUME_JVM_ARGS:-$DEFAULT_VOLUME_JVM_ARGS}
 VOLUME_RUN_SCRIPT=${VOLUME_RUN_SCRIPT:-$DEFAULT_VOLUME_RUN_SCRIPT}
-VOULUME_JVM_ARGS="${VOULUME_JVM_ARGS:-$DEFAULT_VOULUME_JVM_ARGS}
-
 
 # Дополнительные volumes
 ADDITIONAL_VOLUMES=${ADDITIONAL_VOLUMES:-$DEFAULT_ADDITIONAL_VOLUMES}
@@ -69,7 +67,8 @@ function extract_version {
   VERSION=$(echo "$ARCHIVE_PATH" | grep -oP '\d+\.\d+(\.\d+)?')
   if [[ -z "$VERSION" ]]; then
     echo "Не удалось определить версию из имени архива!"
-    read -p "Введите версию вручную (например, 2.5.0): " VERSION
+    echo -n "Введите версию вручную (например, 2.5.0): "
+    read VERSION
     if [[ -z "$VERSION" ]]; then
       echo "Ошибка: версия не указана!"
       exit 1
@@ -146,8 +145,7 @@ EOF
 function ensure_volumes {
   echo "Проверяем наличие volumes..."
 
-  # Проверяем и создаём базовые volumes
-  for volume in "$VOLUME_WORLD" "$VOLUME_PROPERTIES" "$VOLUME_WHITELIST" "$VOLUME_JVM_ARGS" "$VOLUME_RUN_SCRIPT" "VOULUME_JVM_ARGS"; do
+  for volume in "$VOLUME_WORLD" "$VOLUME_PROPERTIES" "$VOLUME_WHITELIST" "$VOLUME_JVM_ARGS" "$VOLUME_RUN_SCRIPT"; do
     host_path=$(echo "$volume" | cut -d':' -f1)
     if [[ ! -e "$host_path" ]]; then
       echo "Создаём $host_path..."
@@ -160,7 +158,6 @@ function ensure_volumes {
     fi
   done
 
-  # Проверяем и создаём дополнительные volumes
   for volume in $ADDITIONAL_VOLUMES; do
     host_path=$(echo "$volume" | cut -d':' -f1)
     if [[ ! -e "$host_path" ]]; then
@@ -214,7 +211,6 @@ EOF
       - $VOLUME_RUN_SCRIPT
 EOF
 
-  # Добавление дополнительных volumes
   if [[ -n "$ADDITIONAL_VOLUMES" ]]; then
     for vol in $ADDITIONAL_VOLUMES; do
       echo "      - $vol" >> "$DOCKER_COMPOSE_PATH"
@@ -230,7 +226,6 @@ EOF
 }
 
 # --- Основной процесс ---
-
 find_archive
 extract_version
 unpack_archive
@@ -239,4 +234,3 @@ ensure_volumes
 create_dockerfile
 build_docker_image
 create_docker_compose
-
