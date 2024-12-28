@@ -17,6 +17,7 @@ DEFAULT_VOLUME_PROPERTIES="$DEFAULT_VOLUME_DIR/server.properties:/minecraft/serv
 DEFAULT_VOLUME_WHITELIST="$DEFAULT_VOLUME_DIR/whitelist.json:/minecraft/whitelist.json"
 DEFAULT_VOLUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/user_jvm_args.txt"
 DEFAULT_VOLUME_RUN_SCRIPT="$DEFAULT_VOLUME_DIR/run.sh:/minecraft/run.sh"
+DEFAULT_VOULUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/libraries/net/minecraftforge/forge/1.20.1-47.3.12/unix_args.txt"
 
 # Дополнительные volumes (только кастомные, без базовых)
 DEFAULT_ADDITIONAL_VOLUMES=""
@@ -43,6 +44,8 @@ VOLUME_PROPERTIES=${VOLUME_PROPERTIES:-$DEFAULT_VOLUME_PROPERTIES}
 VOLUME_WHITELIST=${VOLUME_WHITELIST:-$DEFAULT_VOLUME_WHITELIST}
 VOLUME_JVM_ARGS=${VOLUME_JVM_ARGS:-$DEFAULT_VOLUME_JVM_ARGS}
 VOLUME_RUN_SCRIPT=${VOLUME_RUN_SCRIPT:-$DEFAULT_VOLUME_RUN_SCRIPT}
+VOULUME_JVM_ARGS="${VOULUME_JVM_ARGS:-$DEFAULT_VOULUME_JVM_ARGS}
+
 
 # Дополнительные volumes
 ADDITIONAL_VOLUMES=${ADDITIONAL_VOLUMES:-$DEFAULT_ADDITIONAL_VOLUMES}
@@ -144,7 +147,7 @@ function ensure_volumes {
   echo "Проверяем наличие volumes..."
 
   # Проверяем и создаём базовые volumes
-  for volume in "$VOLUME_WORLD" "$VOLUME_PROPERTIES" "$VOLUME_WHITELIST" "$VOLUME_JVM_ARGS" "$VOLUME_RUN_SCRIPT"; do
+  for volume in "$VOLUME_WORLD" "$VOLUME_PROPERTIES" "$VOLUME_WHITELIST" "$VOLUME_JVM_ARGS" "$VOLUME_RUN_SCRIPT" "VOULUME_JVM_ARGS"; do
     host_path=$(echo "$volume" | cut -d':' -f1)
     if [[ ! -e "$host_path" ]]; then
       echo "Создаём $host_path..."
@@ -236,3 +239,4 @@ ensure_volumes
 create_dockerfile
 build_docker_image
 create_docker_compose
+
