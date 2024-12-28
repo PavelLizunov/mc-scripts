@@ -15,9 +15,9 @@ DEFAULT_JAVA_ARCHIVE_NAME="zulu21.36.17-ca-jdk21.0.4-linux_x64.tar.gz"
 DEFAULT_VOLUME_WORLD="$DEFAULT_VOLUME_DIR/world:/minecraft/world"
 DEFAULT_VOLUME_PROPERTIES="$DEFAULT_VOLUME_DIR/server.properties:/minecraft/server.properties"
 DEFAULT_VOLUME_WHITELIST="$DEFAULT_VOLUME_DIR/whitelist.json:/minecraft/whitelist.json"
-DEFAULT_VOLUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/user_jvm_args.txt"
+DEFAULT_VOLUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/user_jvm_args.txt" # Пользовательские JVM-аргументы
+DEFAULT_VOLUME_UNIX_ARGS="$DEFAULT_VOLUME_DIR/unix_args.txt:/minecraft/libraries/net/minecraftforge/forge/1.20.1-47.3.12/unix_args.txt" # Unix JVM-аргументы
 DEFAULT_VOLUME_RUN_SCRIPT="$DEFAULT_VOLUME_DIR/run.sh:/minecraft/run.sh"
-DEFAULT_VOLUME_JVM_ARGS="$DEFAULT_VOLUME_DIR/user_jvm_args.txt:/minecraft/libraries/net/minecraftforge/forge/1.20.1-47.3.12/unix_args.txt"
 
 # Дополнительные volumes (только кастомные, без базовых)
 DEFAULT_ADDITIONAL_VOLUMES=""
@@ -43,6 +43,7 @@ VOLUME_WORLD=${VOLUME_WORLD:-$DEFAULT_VOLUME_WORLD}
 VOLUME_PROPERTIES=${VOLUME_PROPERTIES:-$DEFAULT_VOLUME_PROPERTIES}
 VOLUME_WHITELIST=${VOLUME_WHITELIST:-$DEFAULT_VOLUME_WHITELIST}
 VOLUME_JVM_ARGS=${VOLUME_JVM_ARGS:-$DEFAULT_VOLUME_JVM_ARGS}
+VOLUME_UNIX_ARGS=${VOLUME_UNIX_ARGS:-$DEFAULT_VOLUME_UNIX_ARGS}
 VOLUME_RUN_SCRIPT=${VOLUME_RUN_SCRIPT:-$DEFAULT_VOLUME_RUN_SCRIPT}
 
 # Дополнительные volumes
@@ -145,7 +146,7 @@ EOF
 function ensure_volumes {
   echo "Проверяем наличие volumes..."
 
-  for volume in "$VOLUME_WORLD" "$VOLUME_PROPERTIES" "$VOLUME_WHITELIST" "$VOLUME_JVM_ARGS" "$VOLUME_RUN_SCRIPT"; do
+  for volume in "$VOLUME_WORLD" "$VOLUME_PROPERTIES" "$VOLUME_WHITELIST" "$VOLUME_JVM_ARGS" "$VOLUME_RUN_SCRIPT" "$VOLUME_UNIX_ARGS"; do
     host_path=$(echo "$volume" | cut -d':' -f1)
     if [[ ! -e "$host_path" ]]; then
       echo "Создаём $host_path..."
@@ -209,6 +210,7 @@ EOF
       - $VOLUME_WHITELIST
       - $VOLUME_JVM_ARGS
       - $VOLUME_RUN_SCRIPT
+      - $VOLUME_UNIX_ARGS
 EOF
 
   if [[ -n "$ADDITIONAL_VOLUMES" ]]; then
@@ -234,3 +236,4 @@ ensure_volumes
 create_dockerfile
 build_docker_image
 create_docker_compose
+
