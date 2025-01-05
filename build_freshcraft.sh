@@ -5,6 +5,7 @@ CONFIG_FILE="config.cfg"
 
 # Значения по умолчанию
 DEFAULT_ARCHIVE_PATH=""
+DEFAULT_SERVER_DIR="freshcraft_server"
 DEFAULT_VOLUME_DIR="$HOME/.volume_freshcraft"
 DEFAULT_DOCKER_IMAGE_NAME="freshcraft_server"
 DEFAULT_DOCKER_COMPOSE_PATH="$PWD/docker-compose.yml"
@@ -32,6 +33,7 @@ fi
 
 # Установка значений из конфигурации или по умолчанию
 ARCHIVE_PATH=${ARCHIVE_PATH:-$DEFAULT_ARCHIVE_PATH}
+SERVER_DIR=${SERVER_DIR:-$DEFAULT_SERVER_DIR}
 VOLUME_DIR=${VOLUME_DIR:-$DEFAULT_VOLUME_DIR}
 DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-$DEFAULT_DOCKER_IMAGE_NAME}
 DOCKER_COMPOSE_PATH=${DOCKER_COMPOSE_PATH:-$DEFAULT_DOCKER_COMPOSE_PATH}
@@ -80,24 +82,24 @@ function extract_version {
 # Распаковка архива
 function unpack_archive {
   echo "Распаковываем архив \"$ARCHIVE_PATH\"..."
-  mkdir -p "$PWD/fresh_craft_$VERSION"
-  unzip -o "$ARCHIVE_PATH" -d "$PWD/fresh_craft_$VERSION"
+  mkdir -p "$PWD/$SERVER_DIR+_+$VERSION"
+  unzip -o "$ARCHIVE_PATH" -d "$PWD/$SERVER_DIR_$VERSION"
 }
 
 # Перенос кастомной Java
 function move_java {
-  JAVA_FILE=$(find "$PWD/fresh_craft_$VERSION" -name "$JAVA_ARCHIVE_NAME" | head -n 1)
+  JAVA_FILE=$(find "$PWD/$SERVER_DIR+_+$VERSION" -name "$JAVA_ARCHIVE_NAME" | head -n 1)
   if [[ -z "$JAVA_FILE" ]]; then
     echo "Файл кастомной Java $JAVA_ARCHIVE_NAME не найден!"
     exit 1
   fi
 
-  SERVER_FOLDER="$PWD/fresh_craft_$VERSION/freshcraft_server"
+  SERVER_FOLDER="$PWD/fresh_craft_$VERSION/$SERVER_DIR"
   if [[ -d "$SERVER_FOLDER" ]]; then
     echo "Перенос кастомной Java в папку сервера..."
     mv "$JAVA_FILE" "$SERVER_FOLDER/"
   else
-    echo "Папка freshcraft_server не найдена!"
+    echo "Папка $SERVER_DIR не найдена!"
     exit 1
   fi
 }
@@ -195,7 +197,7 @@ version: '3.8'
 services:
   minecraft-server:
     image: ${DOCKER_IMAGE_NAME}:${VERSION}
-    container_name: freshcraft_server
+    container_name: ${SERVER_DIR}
     ports:
 EOF
 
