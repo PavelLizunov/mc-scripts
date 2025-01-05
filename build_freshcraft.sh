@@ -82,31 +82,34 @@ function extract_version {
 # Распаковка архива
 function unpack_archive {
   echo "Распаковываем архив \"$ARCHIVE_PATH\"..."
-  mkdir -p "$PWD/$SERVER_DIR+_+$VERSION"
-  unzip -o "$ARCHIVE_PATH" -d "$PWD/$SERVER_DIR_$VERSION"
+  mkdir -p "$PWD/${SERVER_DIR}_${VERSION}"
+  unzip -o "$ARCHIVE_PATH" -d "$PWD/${SERVER_DIR}_${VERSION}"
 }
 
 # Перенос кастомной Java
 function move_java {
-  JAVA_FILE=$(find "$PWD/$SERVER_DIR+_+$VERSION" -name "$JAVA_ARCHIVE_NAME" | head -n 1)
+  # Ищем архив с Java среди распакованных файлов
+  JAVA_FILE=$(find "$PWD/${SERVER_DIR}_${VERSION}" -name "$JAVA_ARCHIVE_NAME" | head -n 1)
   if [[ -z "$JAVA_FILE" ]]; then
     echo "Файл кастомной Java $JAVA_ARCHIVE_NAME не найден!"
     exit 1
   fi
 
-  SERVER_FOLDER="$PWD/fresh_craft_$VERSION/$SERVER_DIR"
+  SERVER_FOLDER="$PWD/${SERVER_DIR}_${VERSION}"
+
   if [[ -d "$SERVER_FOLDER" ]]; then
     echo "Перенос кастомной Java в папку сервера..."
     mv "$JAVA_FILE" "$SERVER_FOLDER/"
   else
-    echo "Папка $SERVER_DIR не найдена!"
+    echo "Папка $SERVER_FOLDER не найдена!"
     exit 1
   fi
 }
 
 # Создание Dockerfile
 function create_dockerfile {
-  echo "Создаём Dockerfile..."
+  SERVER_FOLDER="$PWD/${SERVER_DIR}_${VERSION}"
+  echo "Создаём Dockerfile в $SERVER_FOLDER..."
   cat > "$SERVER_FOLDER/Dockerfile" <<EOF
 # Используем базовый образ Ubuntu
 FROM ubuntu:20.04
@@ -133,11 +136,13 @@ COPY . /minecraft
 # Открываем порты
 EOF
 
+  # Прописываем EXPOSE для каждого порта
   for port in $PORTS; do
     container_port=$(echo "$port" | cut -d':' -f2 | cut -d'/' -f1)
     echo "EXPOSE $container_port" >> "$SERVER_FOLDER/Dockerfile"
   done
 
+  # Запуск
   cat >> "$SERVER_FOLDER/Dockerfile" <<EOF
 # Команда запуска сервера
 CMD ["java", "@unix_args.txt"]
@@ -177,7 +182,8 @@ function ensure_volumes {
 
 # Создание Docker-образа
 function build_docker_image {
-  echo "Собираем Docker-образ ${DOCKER_IMAGE_NAME}:${VERSION}..."
+  local SERVER_FOLDER="$PWD/${SERVER_DIR}_${VERSION}"
+  echo "Собираем Docker-образ ${DOCKER_IMAGE_NAME}:${VERSION} из папки $SERVER_FOLDER..."
   docker build -t "${DOCKER_IMAGE_NAME}:${VERSION}" "$SERVER_FOLDER"
 
   if [[ $? -eq 0 ]]; then
@@ -190,7 +196,7 @@ function build_docker_image {
 
 # Создание docker-compose.yml
 function create_docker_compose {
-  echo "Создаём docker-compose.yml..."
+  echo "Создаём docker-compose.yml в $DOCKER_COMPOSE_PATH..."
   cat > "$DOCKER_COMPOSE_PATH" <<EOF
 version: '3.8'
 
@@ -238,4 +244,3 @@ ensure_volumes
 create_dockerfile
 build_docker_image
 create_docker_compose
-
